@@ -9,6 +9,8 @@ public abstract class ItemClass : ScriptableObject
 
     public bool isStackable = true;
 
+    public int maxStackQuantity = 0;
+
     public abstract ItemClass GetItem();
     public abstract ToolClass GetTool();
     public abstract MiscClass GetMisc();

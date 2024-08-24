@@ -62,6 +62,18 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
+        if (Input.GetMouseButtonDown(1))
+        {
+            if (isMoving)
+            {
+                //EndMove();
+            }
+            else
+            {
+                BeginSplit();
+            }
+        }
+
         if (isMoving)
         {
             itemCursor.enabled = true;
@@ -183,7 +195,7 @@ public class InventoryManager : MonoBehaviour
     {
         originalSlot = GetClosestSlot();
 
-        if (originalSlot.GetItem() == null) return;
+        if (originalSlot == null || originalSlot.GetItem() == null) return;
 
         movingSlot.AddItem(
             originalSlot.GetItem(), 
@@ -195,9 +207,90 @@ public class InventoryManager : MonoBehaviour
         return;
     }
 
+    private void BeginSplit()
+    {
+        originalSlot = GetClosestSlot();
+
+        if (originalSlot == null || originalSlot.GetItem() == null) return;
+        if(originalSlot.GetQuantity() <= 1)
+        {
+            return;
+        }
+
+        movingSlot.AddItem(originalSlot.GetItem(), Mathf.CeilToInt(originalSlot.GetQuantity() / 2f));
+
+        originalSlot.SubQuantity(Mathf.CeilToInt(originalSlot.GetQuantity() / 2f));
+
+        isMoving = true;
+        RefreshUI();
+        return;
+    }
+
     private void EndMove()
     {
-        //Wait for part 2
+        originalSlot = GetClosestSlot();
+
+        if(originalSlot == null)
+        {
+            AddItem(movingSlot.GetItem(), movingSlot.GetQuantity());
+        }
+        else
+        {
+            if (originalSlot.GetItem() != null)
+            {
+                //If slot is the same item
+                if (originalSlot.GetItem() == movingSlot.GetItem())
+                {
+                    //If slot item is stackable
+                    if (originalSlot.GetItem().isStackable)
+                    {
+                        int itemMaxStack = originalSlot.GetItem().maxStackQuantity; //Apple: 20
+                        int count = originalSlot.GetQuantity() + movingSlot.GetQuantity();// 25
+
+                        if(count > itemMaxStack)
+                        {
+                            int remain = count - itemMaxStack; //5
+                            originalSlot.SetQuantity(itemMaxStack);
+                            movingSlot.SetQuantity(remain);
+
+                            isMoving = true;
+                            RefreshUI();
+                            return;
+                        }else
+                        {
+                            originalSlot.AddQuantity(movingSlot.GetQuantity());
+                            movingSlot.RemoveItem();
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    //Swap
+                    tempSlot.AddItem(originalSlot.GetItem(), originalSlot.GetQuantity());
+                    originalSlot.AddItem(movingSlot.GetItem(), movingSlot.GetQuantity());
+                    movingSlot.AddItem(tempSlot.GetItem(), tempSlot.GetQuantity());
+                    tempSlot.RemoveItem();
+
+                    RefreshUI();
+                    return;
+                }
+            }
+            else
+            {
+                originalSlot.AddItem(movingSlot.GetItem(), movingSlot.GetQuantity());
+                movingSlot.RemoveItem();
+            }
+        }
+
+       
+
+        isMoving = false;
+        RefreshUI();
+        return;
     }
 
 
